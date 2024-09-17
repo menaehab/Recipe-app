@@ -1,8 +1,7 @@
 const searchBoxes = document.querySelectorAll(".searchBox");
 const searchBtns = document.querySelectorAll(".searchBtn");
-const cards = document.getElementById("cards");
+const cardsContainer = document.querySelector(".cards");
 
-// Function to get recipes
 const fetchRecipes = async (query) => {
   try {
     const response = await fetch(
@@ -11,8 +10,7 @@ const fetchRecipes = async (query) => {
     const data = await response.json();
 
     if (data.meals) {
-      const cardsContainer = document.querySelector(".cards"); 
-      cardsContainer.innerHTML = ""; 
+      cardsContainer.innerHTML = "";
 
       data.meals.forEach((meal) => {
         const card = `
@@ -40,11 +38,41 @@ const fetchRecipes = async (query) => {
   }
 };
 
+const fetchRecipeDetails = async (id) => {
+  try {
+    const response = await fetch(
+      `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`
+    );
+    const data = await response.json();
+
+    if (data.meals) {
+      const meal = data.meals[0];
+      const modalBody = document.querySelector(".modal-body");
+      modalBody.innerHTML = `
+        <h5>${meal.strMeal}</h5>
+        <img src="${meal.strMealThumb}" class="img-fluid" alt="${meal.strMeal}">
+        <p>${meal.strInstructions}</p>
+      `;
+    } else {
+      console.log("No details found for the given recipe ID");
+    }
+  } catch (error) {
+    console.error("Error fetching recipe details:", error);
+  }
+};
+
 searchBtns.forEach((btn, index) => {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     const searchInput = searchBoxes[index].value.trim();
     fetchRecipes(searchInput);
-    console.log("clicked");
   });
 });
+
+document
+  .getElementById("exampleModal")
+  .addEventListener("show.bs.modal", (e) => {
+    const button = e.relatedTarget; 
+    const recipeId = button.getAttribute("data-recipe-id"); 
+    fetchRecipeDetails(recipeId); 
+  });
